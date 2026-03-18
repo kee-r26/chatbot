@@ -1,0 +1,151 @@
+export const templates = [
+
+	{
+    intent: "semester_fee",
+    patterns: [
+      "semester fee",
+      "sem fee",
+      "tuition fee",
+      "sem fees",
+      "semstr fee",
+      "smstr fee",
+      "semester",
+      "sem",
+      "how much is the semester fee",
+      "what is the semester fee",
+      "semester fee amount",
+      "pay semester fee",
+      "semester fee details",
+      "semester fee payment",
+      "tell me about semester fee",
+      "info on semester fee",
+      "semester fee info",
+      "what is the cost of semester"
+    ]
+  },
+
+	{
+    intent: "exam_fee",
+    patterns: [
+      "exam fee",
+      "exam fees",
+      "xam fee",
+      "exm fee",
+      "test fee",
+      "how much is the exam fee",
+      "what is the exam fee",
+      "exam fee amount",
+      "pay exam fee",
+      "exam fee details",
+      "exam fee payment",
+      "tell me about exam fee",
+      "info on exam fee",
+      "exam fee info",
+      "what is the cost of exam"
+    ]
+  },
+
+  {
+    intent: "fees",
+    patterns: [
+      "fees",
+      "fee",
+      "payment",
+      "amount",
+      "cost",
+      "fee details",
+      "fee structure",
+      "tell me about fees",
+      "info on fees",
+      "fees info",
+      "what is the cost of fees"
+    ]
+  },
+
+	{
+    intent: "exam",
+    patterns: [
+      "exam",
+      "exams",
+      "xam",
+      "exm",
+      "test",
+      "tests",
+      "paper",
+      "when is my exam",
+      "when are my exams",
+      "when is my xam",
+      "when are my xams",
+      "when is my test",
+      "when are my tests",
+      "exam schedule",
+      "exam timetable",
+      "exam date",
+      "upcoming exam",
+      "upcoming exams",
+      "what is the exam date",
+      "when do exams start",
+      "when is the next exam",
+      "exam time",
+      "exam routine",
+      "tell me about exams",
+      "info on exams",
+      "exam info",
+      "what is the schedule for exams"
+    ]
+  },
+
+	{
+    intent: "timetable",
+    patterns: [
+      "timetable",
+      "tt",
+      "ttbl",
+      "routine",
+      "schedule",
+      "sched",
+      "class timetable",
+      "class",
+      "classes",
+      "cls",
+      "clss",
+      "what classes do i have today",
+      "what class do i have today",
+      "what classes do i have tdy",
+      "what class do i have tdy",
+      "what classes do i have td",
+      "what class do i have td",
+      "sched today",
+      "sched tdy",
+      "sched td",
+      "when are my classes",
+      "when are my class",
+      "when is my class",
+      "when is my classes",
+      "class schedule",
+      "schedule today",
+      "class today",
+      "classes today",
+      "class tomorrow",
+      "classes tomorrow",
+      "when do I have class",
+      "when do I have classes",
+      "what is my timetable",
+      "show my timetable",
+      "cls today",
+      "cls tdy",
+      "cls td",
+      "clss today",
+      "clss tdy",
+      "clss td",
+      "tt today",
+      "tt tdy",
+      "tt td",
+      "tell me about timetable",
+      "info on timetable",
+      "timetable info",
+      "what is the schedule for classes"
+    ]
+  }
+
+]
