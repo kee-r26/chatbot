@@ -1,19 +1,32 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import Cookies from "universal-cookie";
+import jwtDecode from "jwt-decode";
 
-const ProtectedRoute = ({ children, requiredRole }) => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
+const ProtectedRoute = ({ children, roles }) => {
+  const cookies = new Cookies();
+  const token = cookies.get("authToken");
 
   if (!token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && role !== requiredRole) {
-    return <Navigate to="/" replace />;
-  }
-  if (token && role === requiredRole) {
+  try {
+    const decodedToken = jwtDecode(token);
+
+    // Check if the token is expired
+    if (decodedToken.exp * 1000 < Date.now()) {
+      return <Navigate to="/login" replace />;
+    }
+
+    // Check if the user has the required role
+    if (roles && !roles.includes(decodedToken.role)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+
     return children;
+  } catch (error) {
+    return <Navigate to="/login" replace />;
   }
 };
 

@@ -1,33 +1,44 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+import Chat from "./pages/Chat";
 
-function App() {
+const App = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route 
-          path="/student" 
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/admin-dashboard"
           element={
-            <ProtectedRoute requiredRole="student">
-              <StudentDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute roles={["admin"]}>
               <AdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
+        <Route
+          path="/student-dashboard"
+          element={
+            <ProtectedRoute roles={["student"]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute roles={["student", "admin"]}>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
-}
+};
 
 export default App;

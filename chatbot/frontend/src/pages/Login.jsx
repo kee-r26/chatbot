@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from "../api/apiClient";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -14,35 +18,20 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await apiClient.post("/login", { username, password });
+      const { token, role } = response.data;
 
-      const data = await response.json();
+      // Store token in cookies
+      cookies.set("authToken", token, { path: "/" });
 
-      if (!response.ok) {
-        setError(data.message || 'Login failed');
-        setLoading(false);
-        return;
-      }
-
-      // Store token in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-
-      // Navigate based on role
-      if (data.role === 'admin') {
-        navigate('/admin');
-      } else if (data.role === 'student') {
-        navigate('/student');
+      // Redirect based on role
+      if (role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/student-dashboard");
       }
     } catch (err) {
-      setError('Connection error. Please try again.');
-      console.error('Login error:', err);
+      setError("Invalid username or password");
     } finally {
       setLoading(false);
     }

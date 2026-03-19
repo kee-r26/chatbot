@@ -2,27 +2,20 @@ import jwt from "jsonwebtoken";
 
 const SECRET = "MY_SECRET_KEY";
 
-export function verifyToken(req, res, next) {
-
+export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(401).json({ message: "Token missing" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
 
   const token = authHeader.split(" ")[1];
 
   try {
-
     const decoded = jwt.verify(token, SECRET);
-
-    req.user = decoded;
-
+    req.user = decoded; // Attach decoded token payload to req.user
     next();
-
-  } catch (error) {
-
-    res.status(403).json({ message: "Invalid token" });
-
+  } catch (err) {
+    return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
-}
+};

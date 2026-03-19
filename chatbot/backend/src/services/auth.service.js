@@ -3,9 +3,11 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../config/jwt.js";
 
 export async function loginUser(username, password) {
-
   const [rows] = await db.execute(
-    "SELECT * FROM users WHERE username = ?",
+    `SELECT u.*, s.department 
+     FROM users u 
+     LEFT JOIN students s ON u.username = s.roll_number 
+     WHERE u.username = ?`,
     [username]
   );
 
@@ -25,6 +27,6 @@ export async function loginUser(username, password) {
 
   return {
     token,
-    role: user.role
+    role: user.role,
   };
 }
