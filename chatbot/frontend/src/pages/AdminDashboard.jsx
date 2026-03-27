@@ -1,119 +1,103 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, Upload } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, Upload, CheckCircle, XCircle } from "lucide-react";
+import Cookies from "universal-cookie";
+import { uploadCSV, addFormData } from "../actions/adminActions";
+
+const cookies = new Cookies();
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const [csvDataType, setCsvDataType] = useState('Timetable');
-  const [formDataType, setFormDataType] = useState('Timetable');
+  const [csvDataType, setCsvDataType] = useState("Timetable");
+  const [formDataType, setFormDataType] = useState("Timetable");
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({});
-  const [uploadMethod, setUploadMethod] = useState(null); // 'csv' or 'form'
+  const [uploadMethod, setUploadMethod] = useState(null); // 'csv' | 'form'
+  const [feedback, setFeedback] = useState(null); // { type: 'success'|'error', message: string }
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    navigate('/');
+    cookies.remove("authToken", { path: "/" });
+    navigate("/login");
+  };
+
+  const showFeedback = (type, message) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 4000);
   };
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
   };
 
-  const handleUploadCSV = () => {
+  const handleUploadCSV = async () => {
     if (!selectedFile) {
-      alert('Please select a file');
+      showFeedback("error", "Please select a file before uploading.");
       return;
     }
-    console.log(`Uploading ${csvDataType}:`, selectedFile);
-    // Add API call here
+    setIsSubmitting(true);
+    try {
+      const result = await uploadCSV(csvDataType, selectedFile);
+      showFeedback("success", result.message || "File uploaded successfully.");
+      setSelectedFile(null);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Upload failed. Please try again.";
+      showFeedback("error", msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    console.log(`Submitting ${formDataType}:`, formData);
-    // Add API call here
+    setIsSubmitting(true);
+    try {
+      const result = await addFormData(formDataType, formData);
+      showFeedback("success", result.message || "Data added successfully.");
+      setFormData({});
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Submission failed. Please try again.";
+      showFeedback("error", msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleFormReset = () => {
-    setFormData({});
-  };
+  const handleFormReset = () => setFormData({});
 
   const renderFormFields = () => {
     switch (formDataType) {
-      case 'Timetable':
+      case "Timetable":
         return (
           <>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-              <input type="text" name="department" value={formData.department || ''} onChange={handleFormChange} placeholder="Enter department" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Day</label>
-              <input type="text" name="day" value={formData.day || ''} onChange={handleFormChange} placeholder="Enter day" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
-              <input type="text" name="subject" value={formData.subject || ''} onChange={handleFormChange} placeholder="Enter subject" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
-              <input type="time" name="startTime" value={formData.startTime || ''} onChange={handleFormChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
-              <input type="time" name="endTime" value={formData.endTime || ''} onChange={handleFormChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
+            <FormField label="Department" name="department" value={formData.department || ""} onChange={handleFormChange} placeholder="e.g. CSE" />
+            <FormField label="Day" name="day" value={formData.day || ""} onChange={handleFormChange} placeholder="e.g. Monday" />
+            <FormField label="Subject" name="subject" value={formData.subject || ""} onChange={handleFormChange} placeholder="e.g. Data Structures" />
+            <FormField label="Start Time" name="startTime" type="time" value={formData.startTime || ""} onChange={handleFormChange} />
+            <FormField label="End Time" name="endTime" type="time" value={formData.endTime || ""} onChange={handleFormChange} />
           </>
         );
-      case 'Exam Schedule':
+      case "Exam Schedule":
         return (
           <>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-              <input type="text" name="department" value={formData.department || ''} onChange={handleFormChange} placeholder="Enter department" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
-              <input type="text" name="subject" value={formData.subject || ''} onChange={handleFormChange} placeholder="Enter subject" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Exam Date</label>
-              <input type="date" name="examDate" value={formData.examDate || ''} onChange={handleFormChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Exam Time</label>
-              <input type="time" name="examTime" value={formData.examTime || ''} onChange={handleFormChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
+            <FormField label="Department" name="department" value={formData.department || ""} onChange={handleFormChange} placeholder="e.g. CSE" />
+            <FormField label="Subject" name="subject" value={formData.subject || ""} onChange={handleFormChange} placeholder="e.g. DBMS" />
+            <FormField label="Exam Date" name="examDate" type="date" value={formData.examDate || ""} onChange={handleFormChange} />
+            <FormField label="Exam Time" name="examTime" type="time" value={formData.examTime || ""} onChange={handleFormChange} />
           </>
         );
-      case 'Fees':
+      case "Fees":
         return (
           <>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-              <input type="text" name="department" value={formData.department || ''} onChange={handleFormChange} placeholder="Enter department" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Semester</label>
-              <input type="text" name="semester" value={formData.semester || ''} onChange={handleFormChange} placeholder="Enter semester" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Semester Fee</label>
-              <input type="number" name="semesterFee" value={formData.semesterFee || ''} onChange={handleFormChange} placeholder="Enter semester fee" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Exam Fee</label>
-              <input type="number" name="examFee" value={formData.examFee || ''} onChange={handleFormChange} placeholder="Enter exam fee" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]" />
-            </div>
+            <FormField label="Department" name="department" value={formData.department || ""} onChange={handleFormChange} placeholder="e.g. CSE" />
+            <FormField label="Semester" name="semester" type="number" value={formData.semester || ""} onChange={handleFormChange} placeholder="e.g. 3" />
+            <FormField label="Semester Fee (₹)" name="semesterFee" type="number" value={formData.semesterFee || ""} onChange={handleFormChange} placeholder="e.g. 45000" />
+            <FormField label="Exam Fee (₹)" name="examFee" type="number" value={formData.examFee || ""} onChange={handleFormChange} placeholder="e.g. 1500" />
           </>
         );
       default:
@@ -123,146 +107,190 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#1E1E2F] text-slate-800 p-8">
-      {/* Top Right Logout Button */}
+
+      {/* Top bar */}
       <div className="flex justify-end mb-8">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-600 hover:text-red-700 py-2 px-4 rounded-xl font-medium transition-all border border-red-600/50"
+          className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-500 hover:text-red-400 py-2 px-4 rounded-xl font-medium transition-all border border-red-600/50"
         >
           <LogOut size={18} /> Logout
         </button>
       </div>
 
-      {/* Main Title */}
-      <div className="text-center mb-12">
+      {/* Title */}
+      <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
         <p className="text-gray-400">Manage and add data to the system</p>
       </div>
 
+      {/* Feedback banner */}
+      {feedback && (
+        <div
+          className={`max-w-xl mx-auto mb-6 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium ${
+            feedback.type === "success"
+              ? "bg-green-500/10 border-green-500/40 text-green-400"
+              : "bg-red-500/10 border-red-500/40 text-red-400"
+          }`}
+        >
+          {feedback.type === "success" ? <CheckCircle size={18} /> : <XCircle size={18} />}
+          {feedback.message}
+        </div>
+      )}
 
-
-      {/* Upload Method Selection Cards */}
+      {/* Method selection cards */}
       {!uploadMethod && (
         <div className="flex justify-center gap-8 mb-12">
-          <div
-            className="w-80 p-8 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300"
-            onClick={() => setUploadMethod('csv')}
-          >
-            <Upload className="text-[#6366F1] w-12 h-12 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-center text-slate-800 mb-2">Upload CSV File</h2>
-            <p className="text-center text-slate-600">Upload data in bulk using a CSV file.</p>
-          </div>
-          <div
-            className="w-80 p-8 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300"
-            onClick={() => setUploadMethod('form')}
-          >
-            <Upload className="text-[#6366F1] w-12 h-12 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-center text-slate-800 mb-2">Upload Data Manually</h2>
-            <p className="text-center text-slate-600">Manually enter data using a structured form.</p>
+          <MethodCard
+            icon={<Upload className="text-[#6366F1] w-12 h-12 mx-auto mb-4" />}
+            title="Upload CSV File"
+            description="Upload data in bulk using a CSV file."
+            onClick={() => setUploadMethod("csv")}
+          />
+          <MethodCard
+            icon={<Upload className="text-[#6366F1] w-12 h-12 mx-auto mb-4" />}
+            title="Upload Data Manually"
+            description="Manually enter data using a structured form."
+            onClick={() => setUploadMethod("form")}
+          />
+        </div>
+      )}
+
+      {/* CSV upload panel */}
+      {uploadMethod === "csv" && (
+        <div className="flex justify-center mb-12">
+          <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg">
+            <h3 className="text-xl font-semibold text-slate-800 mb-4">Upload CSV File</h3>
+            <SelectField
+              id="csvDataType"
+              label="Select Data Type"
+              value={csvDataType}
+              onChange={(e) => setCsvDataType(e.target.value)}
+            />
+            <div className="mb-4">
+              <label htmlFor="csvFile" className="block text-sm font-medium text-slate-700 mb-2">
+                Upload CSV File
+              </label>
+              <input
+                type="file"
+                id="csvFile"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="w-full text-slate-700 border border-gray-300 rounded-lg cursor-pointer bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#6366F1] file:text-white hover:file:bg-[#5053D6]"
+              />
+            </div>
+            <button
+              onClick={handleUploadCSV}
+              disabled={isSubmitting}
+              className="w-full bg-[#6366F1] text-white py-2 px-4 rounded-lg hover:bg-[#5053D6] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <Upload size={20} />
+              {isSubmitting ? "Uploading..." : "Upload CSV"}
+            </button>
+            <BackButton onClick={() => { setUploadMethod(null); setFeedback(null); }} />
           </div>
         </div>
       )}
 
-      {uploadMethod === 'csv' && (
-        <>
-          <div className="flex justify-center mb-12">
-            <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold text-slate-800 mb-4">Upload Timetable CSV</h3>
-              <div className="mb-4">
-                <label htmlFor="csvDataType" className="block text-sm font-medium text-slate-700 mb-2">Select Data Type</label>
-                <select
-                  id="csvDataType"
-                  value={csvDataType}
-                  onChange={(e) => setCsvDataType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+      {/* Form upload panel */}
+      {uploadMethod === "form" && (
+        <div className="flex justify-center items-center">
+          <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg">
+            <h3 className="text-xl font-semibold text-slate-800 mb-4">Enter Data Manually</h3>
+            <SelectField
+              id="formDataType"
+              label="Select Data Type"
+              value={formDataType}
+              onChange={(e) => { setFormDataType(e.target.value); setFormData({}); }}
+            />
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              {renderFormFields()}
+              <div className="flex gap-4 mt-6">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#6366F1] text-white py-2 px-4 rounded-lg hover:bg-[#5053D6] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  <option value="Timetable">Timetable</option>
-                  <option value="Exam Schedule">Exam Schedule</option>
-                  <option value="Fees">Fees</option>
-                  <option value="Courses">Courses</option>
-                  <option value="Admissions">Admissions</option>
-                  <option value="Faculty">Faculty</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <label htmlFor="csvFile" className="block text-sm font-medium text-slate-700 mb-2">Upload CSV File</label>
-                <input
-                  type="file"
-                  id="csvFile"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  className="w-full text-slate-700 border border-gray-300 rounded-lg cursor-pointer bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#6366F1] file:text-white hover:file:bg-[#5053D6]"
-                />
-              </div>
-              <button
-                onClick={handleUploadCSV}
-                className="w-full bg-[#6366F1] text-white py-2 px-4 rounded-lg hover:bg-[#5053D6] transition-colors duration-300 flex items-center justify-center gap-2"
-              >
-                <Upload size={20} />
-                Upload CSV
-              </button>
-              <button
-                onClick={() => setUploadMethod(null)}
-                className="w-full bg-gray-300 text-slate-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300 mt-4"
-              >
-                Back to Upload Method Selection
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {uploadMethod === 'form' && (
-        <>
-          <div className="flex justify-center items-center">
-            <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold text-slate-800 mb-4">Enter Data Manually</h3>
-              <div className="mb-4">
-                <label htmlFor="formDataType" className="block text-sm font-medium text-slate-700 mb-2">Select Data Type</label>
-                <select
-                  id="formDataType"
-                  value={formDataType}
-                  onChange={(e) => setFormDataType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
-                >
-                  <option value="Timetable">Timetable</option>
-                  <option value="Exam Schedule">Exam Schedule</option>
-                  <option value="Fees">Fees</option>
-                  <option value="Courses">Courses</option>
-                  <option value="Admissions">Admissions</option>
-                  <option value="Faculty">Faculty</option>
-                </select>
-              </div>
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                {renderFormFields()}
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="submit"
-                    className="w-full bg-[#6366F1] text-white py-2 px-4 rounded-lg hover:bg-[#5053D6] transition-colors duration-300 flex items-center justify-center gap-2"
-                  >
-                    Submit Data
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleFormReset}
-                    className="w-full bg-gray-300 text-slate-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300"
-                  >
-                    Reset
-                  </button>
-                </div>
+                  {isSubmitting ? "Submitting..." : "Submit Data"}
+                </button>
                 <button
                   type="button"
-                  onClick={() => setUploadMethod(null)}
-                  className="w-full bg-gray-300 text-slate-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300 mt-4"
+                  onClick={handleFormReset}
+                  className="w-full bg-gray-300 text-slate-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
                 >
-                  Back to Upload Method Selection
+                  Reset
                 </button>
-              </form>
-            </div>
+              </div>
+              <BackButton onClick={() => { setUploadMethod(null); setFeedback(null); }} />
+            </form>
           </div>
-        </>
+        </div>
       )}
     </div>
+  );
+}
+
+// ── Small reusable sub-components ─────────────────────────────────────────────
+
+function FormField({ label, name, type = "text", value, onChange, placeholder }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+      />
+    </div>
+  );
+}
+
+function SelectField({ id, label, value, onChange }) {
+  return (
+    <div className="mb-4">
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-2">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={onChange}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+      >
+        <option value="Timetable">Timetable</option>
+        <option value="Exam Schedule">Exam Schedule</option>
+        <option value="Fees">Fees</option>
+      </select>
+    </div>
+  );
+}
+
+function MethodCard({ icon, title, description, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-80 p-8 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow text-left"
+    >
+      {icon}
+      <h2 className="text-xl font-semibold text-center text-slate-800 mb-2">{title}</h2>
+      <p className="text-center text-slate-600">{description}</p>
+    </button>
+  );
+}
+
+function BackButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full bg-gray-300 text-slate-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors mt-4"
+    >
+      Back to Upload Method Selection
+    </button>
   );
 }
 
