@@ -1,10 +1,9 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
-import Chat from "./pages/Chat";
 
 const App = () => {
   return (
@@ -27,15 +26,9 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute roles={["student", "admin"]}>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<div>404 Not Found</div>} />
+        {/* Redirect root and any unknown path to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

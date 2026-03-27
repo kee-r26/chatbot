@@ -1,15 +1,29 @@
 
-CREATE DATABASE college_chatbot;
-USE college_chatbot;
+CREATE DATABASE IF NOT EXISTS college_helpdesk_chatbot;
+USE college_helpdesk_chatbot;
 
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS users (
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('admin','student') DEFAULT 'student',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- user_id FK links a student record to its login account
+-- students.username JOIN users.username (roll_number = username) still works for auth
+CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
   roll_number VARCHAR(20),
   name VARCHAR(100),
-  department VARCHAR(50)
+  department VARCHAR(50),
+  user_id INT UNIQUE,
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE timetable (
+CREATE TABLE IF NOT EXISTS timetable (
   id INT AUTO_INCREMENT PRIMARY KEY,
   department VARCHAR(50),
   day VARCHAR(20),
@@ -18,7 +32,7 @@ CREATE TABLE timetable (
   end_time TIME
 );
 
-CREATE TABLE exams (
+CREATE TABLE IF NOT EXISTS exams (
   id INT AUTO_INCREMENT PRIMARY KEY,
   department VARCHAR(50),
   subject VARCHAR(100),
@@ -26,7 +40,7 @@ CREATE TABLE exams (
   exam_time TIME
 );
 
-CREATE TABLE fees (
+CREATE TABLE IF NOT EXISTS fees (
   id INT AUTO_INCREMENT PRIMARY KEY,
   department VARCHAR(50),
   semester INT,
@@ -34,20 +48,23 @@ CREATE TABLE fees (
   exam_fee INT
 );
 
-CREATE TABLE query_history (
+-- One row per chat session belonging to a user
+CREATE TABLE IF NOT EXISTS conversations (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  student_id INT,
-  question TEXT,
-  response TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL DEFAULT 'New Conversation',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin','student') DEFAULT 'student',
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- Each row = one Q&A exchange; belongs to a conversation session
+CREATE TABLE IF NOT EXISTS query_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  conversation_id INT NOT NULL,
+  question TEXT,
+  response TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
 );
