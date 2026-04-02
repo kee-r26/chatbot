@@ -1,6 +1,6 @@
 
-CREATE DATABASE IF NOT EXISTS college_helpdesk_chatbot;
-USE college_helpdesk_chatbot;
+CREATE DATABASE IF NOT EXISTS chatbot;
+USE chatbot;
 
 CREATE TABLE IF NOT EXISTS users (
   user_id INT AUTO_INCREMENT PRIMARY KEY,

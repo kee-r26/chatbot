@@ -107,11 +107,6 @@ function SidebarSkeleton() {
 }
 
 // ── Welcome / empty state ─────────────────────────────────────────────────────
-const SUGGESTIONS = [
-  "What are my classes today?",
-  "When is my next exam?",
-  "What are my semester fees?",
-];
 
 function WelcomeScreen({ onSuggest }) {
   return (
@@ -127,6 +122,40 @@ function WelcomeScreen({ onSuggest }) {
           Ask me about your timetable, exams, or fees.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ── Format timestamp ──────────────────────────────────────────────────────────
+function formatTime(ts) {
+  if (!ts) return "";
+  const d = ts instanceof Date ? ts : new Date(ts);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+// ── FAQ section ───────────────────────────────────────────────────────────
+const SUGGESTIONS = [
+  "What are my classes today?",
+  "When is my next exam?",
+  "What are my semester fees?",
+  "What are my exam fees?"
+];
+
+function FAQScreen({ onSuggest }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-8 text-center px-8">
+      <div>
+        <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Bot size={32} className="text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-2">
+          How can I help you today?
+        </h3>
+        <p className="text-gray-400 text-sm">
+          Ask me about your timetable, exams, or fees.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-3 w-full max-w-sm">
         {SUGGESTIONS.map((s) => (
           <button
@@ -142,15 +171,28 @@ function WelcomeScreen({ onSuggest }) {
   );
 }
 
-// ── Format timestamp ──────────────────────────────────────────────────────────
-function formatTime(ts) {
-  if (!ts) return "";
-  const d = ts instanceof Date ? ts : new Date(ts);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+// ── Help & Support ───────────────────────────────────────────────────────────
+function HelpScreen() {
+  return (
+    <div className="flex items-center justify-center h-full text-center px-8">
+      <div>
+        <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <HelpCircle size={32} className="text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Need Help?
+        </h3>
+        <p className="text-gray-400 text-sm">
+          For further queries, please contact{" "}
+          <span className="text-indigo-400">example@gmail.com</span>
+        </p>
+      </div>
+    </div>
+  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-const StudentDashboard = () => {
+const StudentDashboard = ({ showUnauthorized }) => {
   const navigate = useNavigate();
 
   const [conversations, setConversations] = useState([]);
@@ -160,6 +202,8 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarLoading, setIsSidebarLoading] = useState(true);
   const [hoveredConvId, setHoveredConvId] = useState(null);
+
+  const [view, setView] = useState("chat"); // "chat" | "faq" | "help"
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -190,6 +234,7 @@ const StudentDashboard = () => {
 
   // Open a past conversation
   const handleSelectConversation = async (id) => {
+    setView("chat");
     if (id === activeConversationId) return;
     setActiveConversationId(id);
     setMessages([]);
@@ -204,6 +249,7 @@ const StudentDashboard = () => {
 
   // Start a brand-new conversation
   const handleNewChat = async () => {
+    setView("chat");
     try {
       const res = await createConversation();
       const newConv = res.data;
@@ -235,6 +281,8 @@ const StudentDashboard = () => {
   const handleSend = async (text) => {
     const trimmed = (text ?? inputValue).trim();
     if (!trimmed || isLoading) return;
+
+    setView("chat");
 
     setInputValue("");
 
@@ -311,16 +359,37 @@ const StudentDashboard = () => {
 
         {/* Static nav */}
         <nav className="space-y-3 mb-6">
-          <div className="flex items-center gap-3 px-2 cursor-pointer hover:text-white transition">
-            <MessageSquare size={18} /> <span className="text-sm">FAQ Section</span>
-          </div>
-          <div className="flex items-center gap-3 px-2 cursor-pointer hover:text-white transition">
-            <HelpCircle size={18} /> <span className="text-sm">Help &amp; Support</span>
-          </div>
+        <div
+             onClick={() => {
+             setView("faq");
+             setActiveConversationId(null);
+             setMessages([]);
+          }}
+            className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
+            view === "faq" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
+          }`}
+          >
+          <MessageSquare size={18} />
+          <span className="text-sm">FAQ Section</span>
+        </div>
+
+        <div
+            onClick={() => {
+            setView("help");
+            setActiveConversationId(null);
+            setMessages([]);
+          }}
+            className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
+            view === "help" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
+          }`}
+        >
+        <HelpCircle size={18} />
+        <span className="text-sm">Help & Support</span>
+        </div>
         </nav>
 
         {/* Conversations list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto thin-scrollbar">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-3">
             Recent Chats
           </p>
@@ -343,7 +412,7 @@ const StudentDashboard = () => {
                       : "hover:bg-gray-700"
                   }`}
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 text-left">
                     <p className="text-sm font-medium truncate">{conv.title}</p>
                     <p className="text-[10px] text-gray-500 mt-0.5">
                       {formatTime(conv.updated_at)}
@@ -376,11 +445,31 @@ const StudentDashboard = () => {
       {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0">
 
+       {showUnauthorized && (
+      <div className="bg-red-500/10 border-b border-red-500/30 text-red-400 px-6 py-3 text-sm text-center">
+        You have no access to the admin page. Please{" "}
+      <span
+        onClick={() => {
+        cookies.remove("authToken", { path: "/" }); // ✅ IMPORTANT
+        navigate("/login");
+      }}
+        className="font-semibold text-blue-400 cursor-pointer hover:text-blue-300"
+    >
+      Login
+    </span>{" "}
+      as Admin.
+    </div>
+)}
+
         {/* Header */}
         <header className="h-16 bg-gray-800 flex items-center px-8 border-b border-gray-700 justify-between shrink-0">
           <h2 className="text-xl font-semibold text-white">Student Helpdesk Chatbot</h2>
           <span className="text-sm text-gray-400">
-            {activeConversationId
+            {view === "faq"
+              ? "FAQ Section"
+              : view === "help"
+              ? "Help & Support"
+              : activeConversationId
               ? conversations.find((c) => c.id === activeConversationId)?.title || "Chat"
               : "Welcome"}
           </span>
@@ -388,8 +477,12 @@ const StudentDashboard = () => {
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
-          {!activeConversationId && messages.length === 0 ? (
-            <WelcomeScreen onSuggest={(s) => { setInputValue(s); handleSend(s); }} />
+         {view === "faq" ? (
+            <FAQScreen onSuggest={(s) => { setInputValue(s); handleSend(s); }} />
+         ) : view === "help" ? (
+            <HelpScreen />
+            ) : messages.length === 0 ? (
+            <WelcomeScreen />
           ) : (
             <>
               {messages.map((msg, i) =>
@@ -406,6 +499,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Input area */}
+        {view === "chat" && (
         <div className="p-4 border-t border-gray-700 shrink-0">
           <div className="max-w-4xl mx-auto relative flex items-center">
             <input
@@ -427,6 +521,7 @@ const StudentDashboard = () => {
             </button>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

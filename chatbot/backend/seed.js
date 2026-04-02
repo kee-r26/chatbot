@@ -1,6 +1,6 @@
 /**
- * seed.js — inserts a test student + admin user so you can log in immediately.
- * Run once: node seed.js
+ * seed.js — inserts test users and sample data so you can log in immediately.
+ * Safe to run multiple times — all inserts use INSERT IGNORE.
  */
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,14 +17,14 @@ const db = await mysql.createConnection({
 const studentHash = await bcrypt.hash("student123", 10);
 const adminHash = await bcrypt.hash("admin123", 10);
 
-// Insert users
+// Insert users (INSERT IGNORE skips if username already exists)
 await db.execute(
   "INSERT IGNORE INTO users (username, password_hash, role) VALUES (?, ?, 'student')",
-  ["JOHN001", studentHash]
+  ["CS001", studentHash]
 );
 await db.execute(
   "INSERT IGNORE INTO users (username, password_hash, role) VALUES (?, ?, 'admin')",
-  ["ADMIN001", adminHash]
+  ["admin", adminHash]
 );
 
 // Get the student user_id
@@ -32,7 +32,7 @@ const [[studentUser]] = await db.execute(
   "SELECT user_id FROM users WHERE username = 'CS001'"
 );
 
-// Insert student record linked to user
+// Insert student record linked to user (INSERT IGNORE skips if roll_number already exists)
 await db.execute(
   `INSERT IGNORE INTO students (roll_number, name, department, user_id)
    VALUES ('CS001', 'Test Student', 'CSE', ?)`,
@@ -83,5 +83,6 @@ for (const [dept, sem, semFee, examFee] of feesRows) {
 
 await db.end();
 console.log("Seed complete.");
-console.log("  Student login -> username: CS001  password: student123");
-console.log("  Admin login   -> username: admin  password: admin123");
+console.log("  Student login -> username: CS001   password: student123");
+console.log("  Admin login   -> username: admin   password: admin123");
+ 

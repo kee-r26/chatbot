@@ -1,8 +1,8 @@
--- Run this against your existing college_helpdesk_chatbot database
+-- Run this against your existing college_chatbot database
 -- to add the new tables/columns needed for conversation history.
 -- Safe to run multiple times (uses IF NOT EXISTS / IF EXISTS guards).
 
-USE college_helpdesk_chatbot;
+USE college_chatbot;
 
 -- 1. Add user_id FK to students (if not already present)
 ALTER TABLE students
