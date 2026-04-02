@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, MessageSquare, HelpCircle, Send, User, Bot, LogOut, Trash2,
 } from "lucide-react";
+// ADD THIS import
+import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
 import {
@@ -179,12 +181,46 @@ function HelpScreen() {
         <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <HelpCircle size={32} className="text-white" />
         </div>
+
         <h3 className="text-xl font-semibold text-white mb-2">
           Need Help?
         </h3>
-        <p className="text-gray-400 text-sm">
+
+        <p className="text-gray-400 text-sm mb-3">
           For further queries, please contact{" "}
-          <span className="text-indigo-400">example@gmail.com</span>
+          <span className="text-indigo-400">support@college.edu</span>
+        </p>
+
+        <p className="text-gray-400 text-sm">
+          📞 +91 98765 43210
+        </p>
+
+        <p className="text-gray-500 text-xs mt-2">
+          Mon – Fri, 9:00 AM – 5:00 PM
+        </p>
+
+        <p className="text-gray-400 text-sm mt-4">
+          🎓 Exams: <span className="text-indigo-400">exams@college.edu</span>
+        </p>
+
+        <p className="text-gray-400 text-sm">
+          💳 Fees: <span className="text-indigo-400">accounts@college.edu</span>
+        </p>
+
+        <p className="text-gray-400 text-sm">
+          📚 Academics: <span className="text-indigo-400">academics@college.edu</span>
+        </p>
+
+        <p className="text-gray-400 text-sm mt-4">
+          🌐 www.college.edu
+        </p>
+
+        <p className="text-gray-400 text-sm">
+          📸 @college_official
+        </p>
+
+        <p className="text-gray-500 text-xs mt-4">
+          We usually respond within 24 hours on working days.
         </p>
       </div>
     </div>
@@ -204,6 +240,8 @@ const StudentDashboard = ({ showUnauthorized }) => {
   const [hoveredConvId, setHoveredConvId] = useState(null);
 
   const [view, setView] = useState("chat"); // "chat" | "faq" | "help"
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -346,102 +384,179 @@ const StudentDashboard = ({ showUnauthorized }) => {
   return (
     <div className="flex h-screen w-full bg-gray-900 font-sans text-white">
 
-      {/* ── SIDEBAR ───────────────────────────────────────────────────────── */}
-      <aside className="w-72 bg-gray-800 flex flex-col p-4 text-gray-300 border-r border-gray-700 shrink-0">
+     {/* ── SIDEBAR ───────────────────────────────────────────────────────── */}
+<aside
+  className={`${
+    sidebarOpen ? "w-72" : "w-16"
+  } bg-gray-800 flex flex-col px-3 py-4 text-gray-300 border-r border-gray-700 shrink-0 transition-all duration-300`}
+>
+  {/* ── COLLAPSED MODE ── */}
+  {!sidebarOpen ? (
+    <div className="flex flex-col items-center h-full">
 
-        {/* New Chat button */}
+      {/* ICON STACK (perfect spacing) */}
+      <div className="flex flex-col items-center gap-3">
+        
+        {/* Toggle FIRST */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          title="Open Sidebar"
+          className="p-2 rounded-lg hover:bg-gray-700 transition"
+        >
+          <Menu size={18} />
+        </button>
+
         <button
           onClick={handleNewChat}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-all mb-6"
+          title="New Chat"
+          className="p-2 rounded-lg hover:bg-gray-700 transition"
+        >
+          <Plus size={18} />
+        </button>
+
+        <button
+          title="FAQ"
+          onClick={() => {
+            setView("faq");
+            setActiveConversationId(null);
+            setMessages([]);
+          }}
+          className={`p-2 rounded-lg transition ${
+            view === "faq" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
+          }`}
+        >
+          <MessageSquare size={18} />
+        </button>
+
+        <button
+          title="Help"
+          onClick={() => {
+            setView("help");
+            setActiveConversationId(null);
+            setMessages([]);
+          }}
+          className={`p-2 rounded-lg transition ${
+            view === "help" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
+          }`}
+        >
+          <HelpCircle size={18} />
+        </button>
+      </div>
+
+      {/* Logout pinned bottom */}
+      <div className="mt-auto">
+        <button
+          onClick={handleLogout}
+          title="Logout"
+          className="p-2 rounded-lg hover:bg-red-600/30 text-gray-300 hover:text-red-400 transition"
+        >
+          <LogOut size={18} />
+        </button>
+      </div>
+    </div>
+  ) : (
+    /* ── OPEN MODE (UNCHANGED STRUCTURE) ── */
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={handleNewChat}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-14 rounded-lg font-medium"
         >
           <Plus size={18} /> New Chat
         </button>
 
-        {/* Static nav */}
-        <nav className="space-y-3 mb-6">
+        <button
+          onClick={() => setSidebarOpen(false)}
+          title="Close Sidebar"
+          className="p-2 rounded-lg hover:bg-gray-700 transition"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <nav className="space-y-3 mb-6">
         <div
-             onClick={() => {
-             setView("faq");
-             setActiveConversationId(null);
-             setMessages([]);
+          onClick={() => {
+            setView("faq");
+            setActiveConversationId(null);
+            setMessages([]);
           }}
-            className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
+          className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
             view === "faq" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
           }`}
-          >
+        >
           <MessageSquare size={18} />
           <span className="text-sm">FAQ Section</span>
         </div>
 
         <div
-            onClick={() => {
+          onClick={() => {
             setView("help");
             setActiveConversationId(null);
             setMessages([]);
           }}
-            className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
+          className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition ${
             view === "help" ? "bg-gray-700 text-white" : "hover:bg-gray-700"
           }`}
         >
-        <HelpCircle size={18} />
-        <span className="text-sm">Help & Support</span>
+          <HelpCircle size={18} />
+          <span className="text-sm">Help & Support</span>
         </div>
-        </nav>
+      </nav>
 
-        {/* Conversations list */}
-        <div className="flex-1 overflow-y-auto thin-scrollbar">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-3">
-            Recent Chats
-          </p>
-          {isSidebarLoading ? (
-            <SidebarSkeleton />
-          ) : conversations.length === 0 ? (
-            <p className="text-xs text-gray-600 px-2">No conversations yet.</p>
-          ) : (
-            <div className="space-y-1">
-              {conversations.map((conv) => (
+      <div className="flex-1 overflow-y-auto thin-scrollbar">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-3">
+          Recent Chats
+        </p>
+
+        {isSidebarLoading ? (
+          <SidebarSkeleton />
+        ) : conversations.length === 0 ? (
+          <p className="text-xs text-gray-600 px-2">No conversations yet.</p>
+        ) : (
+          <div className="space-y-1">
+            {conversations.map((conv) => (
+              <button
+                key={conv.id}
+                onClick={() => handleSelectConversation(conv.id)}
+                onMouseEnter={() => setHoveredConvId(conv.id)}
+                onMouseLeave={() => setHoveredConvId(null)}
+                className={`w-full flex justify-between items-center p-3 rounded-lg transition ${
+                  conv.id === activeConversationId
+                    ? "bg-gray-700 text-white"
+                    : "hover:bg-gray-700"
+                }`}
+              >
+                <div className="min-w-0 text-left">
+                  <p className="text-sm font-medium truncate">{conv.title}</p>
+                  <p className="text-[10px] text-gray-500">
+                    {formatTime(conv.updated_at)}
+                  </p>
+                </div>
+
+                {hoveredConvId === conv.id && (
                   <button
-                  key={conv.id}
-                  type="button"
-                  onClick={() => handleSelectConversation(conv.id)}
-                  onMouseEnter={() => setHoveredConvId(conv.id)}
-                  onMouseLeave={() => setHoveredConvId(null)}
-                  className={`w-full group flex items-center justify-between p-3 rounded-lg cursor-pointer transition ${
-                    conv.id === activeConversationId
-                      ? "bg-gray-700 text-white"
-                      : "hover:bg-gray-700"
-                  }`}
-                >
-                  <div className="min-w-0 text-left">
-                    <p className="text-sm font-medium truncate">{conv.title}</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      {formatTime(conv.updated_at)}
-                    </p>
-                  </div>
-                  {hoveredConvId === conv.id && (
-                    <button
-                      onClick={(e) => handleDeleteConversation(e, conv.id)}
-                      className="shrink-0 ml-2 p-1 rounded hover:bg-red-600/30 text-gray-500 hover:text-red-400 transition"
-                      title="Delete conversation"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+                    onClick={(e) => handleDeleteConversation(e, conv.id)}
+                    className="p-1 rounded hover:bg-red-600/30 text-gray-500 hover:text-red-400"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full py-3 rounded-lg font-medium transition-all mt-4"
-        >
-          <LogOut size={18} /> Logout
-        </button>
-      </aside>
-
+      <button
+        onClick={handleLogout}
+        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full py-3 rounded-lg font-medium mt-4"
+      >
+        <LogOut size={18} /> Logout
+      </button>
+    </>
+  )}
+</aside>
       {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0">
 
